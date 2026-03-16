@@ -1,0 +1,3 @@
+recursive-include src/maisen/toolkit/*/templates *
+recursive-include src/maisen/toolkit/*/migrations *.py
+recursive-include src/maisen/toolkit/*/locale *.po *.mo
