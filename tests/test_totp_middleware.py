@@ -45,6 +45,8 @@ class TotpMiddlewareTest(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_superuser_without_totp_redirects_to_setup(self):
+        self.superuser.totp_enabled = False
+        self.superuser.totp_secret = ""
         request = self._make_request("/admin/dashboard/", self.superuser)
         response = self.middleware(request)
         self.assertEqual(response.status_code, 302)

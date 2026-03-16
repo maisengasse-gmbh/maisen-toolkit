@@ -52,7 +52,7 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "tests.settings"
-pythonpath = ["src"]
+pythonpath = ["src", "."]
 
 [tool.black]
 line-length = 88
