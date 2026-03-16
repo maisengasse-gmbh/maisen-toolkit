@@ -1,0 +1,25 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+    <div id="content-main">
+        <p class="mb-8">
+            {% trans "Scannen Sie den QR-Code mit einer Authenticator-App (z.B. Google Authenticator, Authy) und geben Sie anschließend den generierten 6-stelligen Code ein." %}
+        </p>
+
+        <div class="mb-6">
+            <img src="data:image/png;base64,{{ qr_code }}" alt="QR-Code">
+        </div>
+
+        <p class="mb-8">
+            {% trans "Manueller Schlüssel:" %}<br>
+            <code>{{ secret }}</code>
+        </p>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">{% trans "2FA aktivieren" %}</button>
+        </form>
+    </div>
+{% endblock %}

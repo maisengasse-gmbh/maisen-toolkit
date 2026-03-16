@@ -1,0 +1,16 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+    <div id="content-main" class="pt-12">
+        <p class="mb-8">
+            {% trans "Bitte geben Sie den 6-stelligen Code aus Ihrer Authenticator-App ein." %}
+        </p>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">{% trans "Bestätigen" %}</button>
+        </form>
+    </div>
+{% endblock %}
