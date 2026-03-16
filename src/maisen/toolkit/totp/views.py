@@ -24,9 +24,12 @@ def totp_verify(
     success_url="/",
     setup_url_name="totp:setup",
     is_admin=False,
+    form_class=None,
 ):
     """TOTP-Code-Eingabe nach Login."""
-    form = TotpCodeForm(request.POST or None)
+    if form_class is None:
+        form_class = TotpCodeForm
+    form = form_class(request.POST or None)
     valid_window = get_totp_setting("VERIFY_VALID_WINDOW")
 
     if request.method == "POST" and form.is_valid():
@@ -61,11 +64,14 @@ def totp_setup(
     template_name,
     manage_url_name="totp:manage",
     is_admin=False,
+    form_class=None,
 ):
     """TOTP-Setup: QR-Code anzeigen und Code bestätigen."""
+    if form_class is None:
+        form_class = TotpCodeForm
     session_key = "totp_setup_secret"
     valid_window = get_totp_setting("SETUP_VALID_WINDOW")
-    form = TotpCodeForm(request.POST or None)
+    form = form_class(request.POST or None)
 
     secret = request.session.get(session_key)
     if not secret:
@@ -83,7 +89,7 @@ def totp_setup(
                 _build_context(
                     request,
                     {
-                        "form": TotpCodeForm(),
+                        "form": form_class(),
                         "qr_code": render_qr(secret, request.user.username),
                         "secret": secret,
                         "title": _("2FA einrichten"),
@@ -126,10 +132,13 @@ def totp_manage(
     manage_url_name="totp:manage",
     setup_url_name="totp:setup",
     is_admin=False,
+    form_class=None,
 ):
     """TOTP-Selbstverwaltung: deaktivieren oder neu einrichten."""
+    if form_class is None:
+        form_class = TotpCodeForm
     valid_window = get_totp_setting("VERIFY_VALID_WINDOW")
-    form = TotpCodeForm(request.POST or None)
+    form = form_class(request.POST or None)
 
     if request.method == "POST":
         action = request.POST.get("action")
