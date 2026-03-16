@@ -1,0 +1,39 @@
+{% extends "admin/base_site.html" %}
+{% load i18n unfold %}
+
+{% block extrahead %}
+    {{ block.super }}
+    {{ form.media }}
+{% endblock %}
+
+{% block content %}
+    <div id="content-main" class="pt-20">
+        <div class="mb-4">
+            {% component "unfold/components/title.html" %}
+                {% trans "Zwei-Faktor-Authentifizierung" %}
+            {% endcomponent %}
+        </div>
+
+        <div class="mb-8">
+            {% component "unfold/components/text.html" %}
+                {% trans "Bitte geben Sie den 6-stelligen Code aus Ihrer Authenticator-App ein." %}
+            {% endcomponent %}
+        </div>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="aligned border border-base-200 mb-8 rounded-default pt-3 px-3 shadow-sm dark:border-base-800">
+                {% for field in form %}
+                    {% include "unfold/helpers/field.html" with field=field %}
+                {% endfor %}
+            </div>
+
+            <div class="flex justify-start">
+                {% component "unfold/components/button.html" with submit=1 %}
+                    {% trans "Bestätigen" %}
+                {% endcomponent %}
+            </div>
+        </form>
+    </div>
+{% endblock %}

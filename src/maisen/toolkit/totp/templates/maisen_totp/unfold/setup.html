@@ -1,0 +1,70 @@
+{% extends "admin/base_site.html" %}
+{% load i18n unfold %}
+
+{% block extrahead %}
+    {{ block.super }}
+    {{ form.media }}
+{% endblock %}
+
+{% if not is_popup %}
+    {% block breadcrumbs %}
+        <div class="px-12">
+            <div class="container mb-12 mx-auto -my-3">
+                <ul class="flex">
+                    {% url 'admin:index' as link %}
+                    {% trans 'Home' as name %}
+                    {% include 'unfold/helpers/breadcrumb_item.html' with link=link name=name %}
+
+                    {% trans '2FA einrichten' as breadcrumb_name %}
+                    {% include 'unfold/helpers/breadcrumb_item.html' with link='' name=breadcrumb_name %}
+                </ul>
+            </div>
+        </div>
+    {% endblock %}
+{% endif %}
+
+{% block content %}
+    <div id="content-main">
+        <div class="mb-4">
+            {% component "unfold/components/title.html" %}
+                {% trans "2FA einrichten" %}
+            {% endcomponent %}
+        </div>
+
+        <div class="mb-6">
+            {% component "unfold/components/text.html" %}
+                {% trans "Scannen Sie den QR-Code mit einer Authenticator-App (z.B. Google Authenticator, Authy) und geben Sie anschließend den generierten 6-stelligen Code ein." %}
+            {% endcomponent %}
+        </div>
+
+        <div class="mb-6">
+            {% component "unfold/components/card.html" %}
+                <img src="data:image/png;base64,{{ qr_code }}" alt="QR-Code" class="block">
+            {% endcomponent %}
+        </div>
+
+        <div class="mb-8">
+            {% component "unfold/components/text.html" %}
+                {% trans "Manueller Schlüssel:" %}
+                <br>
+                <code>{{ secret }}</code>
+            {% endcomponent %}
+        </div>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="aligned border border-base-200 mb-8 rounded-default pt-3 px-3 shadow-sm dark:border-base-800">
+                {% for field in form %}
+                    {% include "unfold/helpers/field.html" with field=field %}
+                {% endfor %}
+            </div>
+
+            <div class="flex justify-start">
+                {% component "unfold/components/button.html" with submit=1 %}
+                    {% trans "2FA aktivieren" %}
+                {% endcomponent %}
+            </div>
+        </form>
+    </div>
+{% endblock %}

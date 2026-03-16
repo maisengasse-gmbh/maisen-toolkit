@@ -18,3 +18,22 @@ class TotpCodeForm(forms.Form):
             }
         ),
     )
+
+
+try:
+    from unfold.widgets import UnfoldAdminTextInputWidget
+
+    class UnfoldTotpCodeForm(TotpCodeForm):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.fields["code"].widget = UnfoldAdminTextInputWidget(
+                attrs={
+                    "autocomplete": "one-time-code",
+                    "inputmode": "numeric",
+                    "autofocus": True,
+                    "placeholder": "000000",
+                }
+            )
+
+except ImportError:
+    pass  # Unfold nicht installiert
