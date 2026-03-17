@@ -1,0 +1,41 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block content %}
+    <div id="content-main" class="pt-12">
+        <p class="mb-8">
+            {% trans "Bitte bestätigen Sie Ihre Identität mit einem registrierten Passkey." %}
+        </p>
+
+        {% if has_credentials %}
+            <div id="passkey-error" style="display:none; color:red;" class="mb-4"></div>
+
+            <button type="button" id="passkey-verify-btn">
+                {% trans "Mit Passkey verifizieren" %}
+            </button>
+        {% else %}
+            <p>{% trans "Kein Passkey für diesen Account registriert." %}</p>
+        {% endif %}
+    </div>
+
+    {% if has_credentials %}
+        <script src="{% static 'maisen_passkeys/js/webauthn.js' %}"></script>
+        <script>
+            document.getElementById("passkey-verify-btn").addEventListener("click", async function() {
+                var errorEl = document.getElementById("passkey-error");
+                errorEl.style.display = "none";
+                try {
+                    await authenticatePasskey(
+                        "{% url 'admin_passkeys:authenticate_begin' %}",
+                        "{% url 'admin_passkeys:authenticate_complete' %}",
+                        "{{ csrf_token }}"
+                    );
+                    window.location.href = "{{ success_url }}";
+                } catch (e) {
+                    errorEl.textContent = e.message;
+                    errorEl.style.display = "block";
+                }
+            });
+        </script>
+    {% endif %}
+{% endblock %}

@@ -9,7 +9,7 @@ readme = "README.md"
 requires-python = ">=3.9"
 license = {text = "MIT"}
 authors = [{name = "Maisengasse", email = "armin@maisengasse.at"}]
-keywords = ["django", "totp", "2fa", "toolkit"]
+keywords = ["django", "totp", "2fa", "passkey", "webauthn", "fido2", "toolkit"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Web Environment",
@@ -38,6 +38,7 @@ dev = [
     "coverage",
 ]
 unfold = ["django-unfold"]
+passkeys = ["fido2>=1.1"]
 
 [project.urls]
 Repository = "https://github.com/wiegon-gmbh/maisen-toolkit"
@@ -47,6 +48,7 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "maisen.toolkit.totp" = ["templates/**/*.html", "migrations/*.py"]
+"maisen.toolkit.passkeys" = ["templates/**/*.html", "static/**/*.js", "migrations/*.py"]
 "maisen.toolkit.core" = ["migrations/*.py"]
 
 [tool.setuptools_scm]

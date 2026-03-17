@@ -27,3 +27,39 @@ def get_totp_setting(name):
     """Liest ein TOTP-Setting aus MAISEN_TOTP oder gibt den Default zurück."""
     user_settings = getattr(settings, "MAISEN_TOTP", {})
     return user_settings.get(name, DEFAULTS[name])
+
+
+# ---------------------------------------------------------------------------
+# Passkey (WebAuthn) Settings
+# ---------------------------------------------------------------------------
+
+PASSKEYS_DEFAULTS = {
+    "RP_ID": "localhost",
+    "RP_NAME": "Django App",
+    "ORIGIN": "http://localhost:8000",
+    "TIMEOUT": 60000,
+    # Pflicht! z.B. "accounts.PasskeyCredential"
+    "CREDENTIAL_MODEL": None,
+    # Akzeptiert auch TOTP-Verifikation in der Passkey-Middleware
+    "ACCEPT_TOTP_VERIFIED": True,
+    "ADMIN_ONLY": True,
+    "EXEMPT_URL_PREFIXES": (
+        "/login/",
+        "/logout/",
+        "/static/",
+        "/media/",
+        "/api/",
+    ),
+    "ADMIN_VERIFY_URL_NAME": "admin_passkeys:verify",
+    "ADMIN_SETUP_URL_NAME": "admin_passkeys:manage",
+    "ADMIN_MANAGE_URL_NAME": "admin_passkeys:manage",
+    "FRONTEND_VERIFY_URL_NAME": "passkeys:verify",
+    "FRONTEND_SETUP_URL_NAME": "passkeys:manage",
+    "ADMIN_EXEMPT_PREFIXES": ("/admin/login", "/admin/logout", "/admin/jsi18n"),
+}
+
+
+def get_passkey_setting(name):
+    """Liest ein Passkey-Setting aus MAISEN_PASSKEYS oder gibt den Default zurück."""
+    user_settings = getattr(settings, "MAISEN_PASSKEYS", {})
+    return user_settings.get(name, PASSKEYS_DEFAULTS[name])

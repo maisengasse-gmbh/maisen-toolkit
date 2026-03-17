@@ -1,0 +1,134 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static unfold %}
+
+{% block extrahead %}
+    {{ block.super }}
+    {% if form.media %}{{ form.media }}{% endif %}
+{% endblock %}
+
+{% if not is_popup %}
+    {% block breadcrumbs %}
+        <div class="px-12">
+            <div class="container mb-12 mx-auto -my-3">
+                <ul class="flex">
+                    {% url 'admin:index' as link %}
+                    {% trans 'Home' as name %}
+                    {% include 'unfold/helpers/breadcrumb_item.html' with link=link name=name %}
+
+                    {% trans 'Passkeys verwalten' as breadcrumb_name %}
+                    {% include 'unfold/helpers/breadcrumb_item.html' with link='' name=breadcrumb_name %}
+                </ul>
+            </div>
+        </div>
+    {% endblock %}
+{% endif %}
+
+{% block content %}
+    <div id="content-main">
+        <div class="mb-4">
+            {% component "unfold/components/title.html" %}
+                {% trans "Passkeys verwalten" %}
+            {% endcomponent %}
+        </div>
+
+        {# Registrierte Passkeys #}
+        {% if credentials %}
+            <div class="border border-base-200 mb-8 rounded-default shadow-sm dark:border-base-800 overflow-hidden">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-base-200 dark:border-base-800">
+                            <th class="px-3 py-2 text-left text-sm font-medium text-base-500">{% trans "Name" %}</th>
+                            <th class="px-3 py-2 text-left text-sm font-medium text-base-500">{% trans "Erstellt am" %}</th>
+                            <th class="px-3 py-2 text-left text-sm font-medium text-base-500">{% trans "Zuletzt verwendet" %}</th>
+                            <th class="px-3 py-2 text-right text-sm font-medium text-base-500"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cred in credentials %}
+                            <tr class="border-b border-base-200 dark:border-base-800 last:border-0">
+                                <td class="px-3 py-2 text-sm">{{ cred.name }}</td>
+                                <td class="px-3 py-2 text-sm">{{ cred.created_at }}</td>
+                                <td class="px-3 py-2 text-sm">{{ cred.last_used_at|default:"-" }}</td>
+                                <td class="px-3 py-2 text-right">
+                                    <form method="post" style="display:inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="credential_id" value="{{ cred.pk }}">
+                                        <button type="submit"
+                                            onclick="return confirm('{% trans "Passkey wirklich löschen?" %}')"
+                                            class="text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 cursor-pointer">
+                                            {% trans "Löschen" %}
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="mb-8">
+                {% component "unfold/components/text.html" %}
+                    {% trans "Noch keine Passkeys registriert." %}
+                {% endcomponent %}
+            </div>
+        {% endif %}
+
+        {# Neuen Passkey registrieren #}
+        <div class="mb-4">
+            {% component "unfold/components/title.html" %}
+                {% trans "Neuen Passkey registrieren" %}
+            {% endcomponent %}
+        </div>
+
+        <div id="passkey-error" style="display:none;" class="mb-4 text-red-600 dark:text-red-400"></div>
+        <div id="passkey-success" style="display:none;" class="mb-4 text-green-600 dark:text-green-400"></div>
+
+        <div class="aligned border border-base-200 mb-8 rounded-default pt-3 px-3 shadow-sm dark:border-base-800">
+            {% for field in form %}
+                {% include "unfold/helpers/field.html" with field=field %}
+            {% endfor %}
+        </div>
+
+        <div class="flex justify-start">
+            <button type="button" id="passkey-register-btn"
+                class="border cursor-pointer font-medium rounded-default text-font-default-light dark:text-font-default-dark bg-primary-600 border-transparent flex font-semibold px-4 py-2 text-sm text-white hover:bg-primary-500 dark:hover:bg-primary-600">
+                {% trans "Passkey registrieren" %}
+            </button>
+        </div>
+    </div>
+
+    <script src="{% static 'maisen_passkeys/js/webauthn.js' %}"></script>
+    <script>
+        document.getElementById("passkey-register-btn").addEventListener("click", async function() {
+            var errorEl = document.getElementById("passkey-error");
+            var successEl = document.getElementById("passkey-success");
+            errorEl.style.display = "none";
+            successEl.style.display = "none";
+
+            var nameInput = document.getElementById("id_name");
+            var name = nameInput ? nameInput.value : "";
+
+            if (!name) {
+                errorEl.textContent = "{% trans 'Bitte geben Sie einen Namen für den Passkey ein.' %}";
+                errorEl.style.display = "block";
+                return;
+            }
+
+            try {
+                await registerPasskey(
+                    "{% url 'admin_passkeys:register_begin' %}",
+                    "{% url 'admin_passkeys:register_complete' %}",
+                    "{{ csrf_token }}",
+                    name
+                );
+                successEl.textContent = "{% trans 'Passkey erfolgreich registriert!' %}";
+                successEl.style.display = "block";
+                setTimeout(function() { window.location.reload(); }, 1000);
+            } catch (e) {
+                errorEl.textContent = e.message;
+                errorEl.style.display = "block";
+            }
+        });
+    </script>
+{% endblock %}

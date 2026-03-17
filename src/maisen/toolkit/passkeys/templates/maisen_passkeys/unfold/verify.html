@@ -1,0 +1,56 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static unfold %}
+
+{% block content %}
+    <div id="content-main" class="pt-20">
+        <div class="mb-4">
+            {% component "unfold/components/title.html" %}
+                {% trans "Passkey-Verifizierung" %}
+            {% endcomponent %}
+        </div>
+
+        <div class="mb-8">
+            {% component "unfold/components/text.html" %}
+                {% trans "Bitte bestätigen Sie Ihre Identität mit einem registrierten Passkey." %}
+            {% endcomponent %}
+        </div>
+
+        {% if has_credentials %}
+            <div id="passkey-error" style="display:none;" class="mb-4 text-red-600 dark:text-red-400"></div>
+
+            <div class="flex justify-start">
+                <button type="button" id="passkey-verify-btn"
+                    class="border cursor-pointer font-medium rounded-default text-font-default-light dark:text-font-default-dark bg-primary-600 border-transparent flex font-semibold px-4 py-2 text-sm text-white hover:bg-primary-500 dark:hover:bg-primary-600">
+                    {% trans "Mit Passkey verifizieren" %}
+                </button>
+            </div>
+        {% else %}
+            <div class="mb-8">
+                {% component "unfold/components/text.html" %}
+                    {% trans "Kein Passkey für diesen Account registriert." %}
+                {% endcomponent %}
+            </div>
+        {% endif %}
+    </div>
+
+    {% if has_credentials %}
+        <script src="{% static 'maisen_passkeys/js/webauthn.js' %}"></script>
+        <script>
+            document.getElementById("passkey-verify-btn").addEventListener("click", async function() {
+                var errorEl = document.getElementById("passkey-error");
+                errorEl.style.display = "none";
+                try {
+                    await authenticatePasskey(
+                        "{% url 'admin_passkeys:authenticate_begin' %}",
+                        "{% url 'admin_passkeys:authenticate_complete' %}",
+                        "{{ csrf_token }}"
+                    );
+                    window.location.href = "{{ success_url }}";
+                } catch (e) {
+                    errorEl.textContent = e.message;
+                    errorEl.style.display = "block";
+                }
+            });
+        </script>
+    {% endif %}
+{% endblock %}

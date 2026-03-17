@@ -1,0 +1,86 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block content %}
+    <div id="content-main">
+        <h2>{% trans "Registrierte Passkeys" %}</h2>
+
+        {% if credentials %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>{% trans "Name" %}</th>
+                        <th>{% trans "Erstellt am" %}</th>
+                        <th>{% trans "Zuletzt verwendet" %}</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cred in credentials %}
+                        <tr>
+                            <td>{{ cred.name }}</td>
+                            <td>{{ cred.created_at }}</td>
+                            <td>{{ cred.last_used_at|default:"-" }}</td>
+                            <td>
+                                <form method="post" style="display:inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="credential_id" value="{{ cred.pk }}">
+                                    <button type="submit" onclick="return confirm('{% trans "Passkey wirklich löschen?" %}')">
+                                        {% trans "Löschen" %}
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>{% trans "Noch keine Passkeys registriert." %}</p>
+        {% endif %}
+
+        <h2 class="mt-8">{% trans "Neuen Passkey registrieren" %}</h2>
+
+        <div id="passkey-error" style="display:none; color:red;" class="mb-4"></div>
+        <div id="passkey-success" style="display:none; color:green;" class="mb-4"></div>
+
+        {{ form.as_p }}
+        <button type="button" id="passkey-register-btn">
+            {% trans "Passkey registrieren" %}
+        </button>
+    </div>
+
+    <script src="{% static 'maisen_passkeys/js/webauthn.js' %}"></script>
+    <script>
+        document.getElementById("passkey-register-btn").addEventListener("click", async function() {
+            var errorEl = document.getElementById("passkey-error");
+            var successEl = document.getElementById("passkey-success");
+            errorEl.style.display = "none";
+            successEl.style.display = "none";
+
+            var nameInput = document.getElementById("id_name");
+            var name = nameInput ? nameInput.value : "";
+
+            if (!name) {
+                errorEl.textContent = "{% trans 'Bitte geben Sie einen Namen für den Passkey ein.' %}";
+                errorEl.style.display = "block";
+                return;
+            }
+
+            try {
+                await registerPasskey(
+                    "{% url 'admin_passkeys:register_begin' %}",
+                    "{% url 'admin_passkeys:register_complete' %}",
+                    "{{ csrf_token }}",
+                    name
+                );
+                successEl.textContent = "{% trans 'Passkey erfolgreich registriert!' %}";
+                successEl.style.display = "block";
+                setTimeout(function() { window.location.reload(); }, 1000);
+            } catch (e) {
+                errorEl.textContent = e.message;
+                errorEl.style.display = "block";
+            }
+        });
+    </script>
+{% endblock %}
