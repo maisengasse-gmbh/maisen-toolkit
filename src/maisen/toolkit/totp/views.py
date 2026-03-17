@@ -51,12 +51,16 @@ def totp_verify(
 
         messages.error(request, _("Ungültiger Code. Bitte erneut versuchen."))
 
+    # Passkey-Option anbieten, wenn User Passkeys registriert hat
+    has_passkeys = getattr(request.user, "has_passkeys", False)
+
     ctx = _build_context(
         request,
         {
             "form": form,
             "title": _("2FA-Verifikation"),
             "is_popup": request.session.get("totp_setup_forced", False),
+            "has_passkeys": has_passkeys,
         },
         is_admin=is_admin,
     )

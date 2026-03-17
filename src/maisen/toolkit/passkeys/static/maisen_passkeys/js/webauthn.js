@@ -65,15 +65,15 @@ async function registerPasskey(beginUrl, completeUrl, csrfToken, name) {
     // 2. Browser-API aufrufen
     const credential = await navigator.credentials.create({ publicKey: publicKey });
 
-    // 3. Complete – Ergebnis an Server senden
+    // 3. Complete – Ergebnis an Server senden (fido2 2.x Format)
+    const regRawId = b64urlEncode(credential.rawId);
     const completeBody = {
-        id: credential.id,
-        rawId: b64urlEncode(credential.rawId),
+        id: regRawId,
+        rawId: regRawId,
         type: credential.type,
         response: {
             clientDataJSON: b64urlEncode(credential.response.clientDataJSON),
             attestationObject: b64urlEncode(credential.response.attestationObject),
-            authenticatorData: b64urlEncode(credential.response.getAuthenticatorData()),
         },
     };
 
@@ -131,9 +131,12 @@ async function authenticatePasskey(beginUrl, completeUrl, csrfToken) {
     // 2. Browser-API aufrufen
     const assertion = await navigator.credentials.get({ publicKey: publicKey });
 
-    // 3. Complete – Ergebnis an Server senden
+    // 3. Complete – Ergebnis an Server senden (fido2 2.x Format)
+    const rawId = b64urlEncode(assertion.rawId);
     const completeBody = {
-        credentialId: b64urlEncode(assertion.rawId),
+        id: rawId,
+        rawId: rawId,
+        type: assertion.type,
         response: {
             clientDataJSON: b64urlEncode(assertion.response.clientDataJSON),
             authenticatorData: b64urlEncode(assertion.response.authenticatorData),

@@ -19,7 +19,14 @@ DEFAULTS = {
     "FRONTEND_VERIFY_URL_NAME": "totp:verify",
     "FRONTEND_SETUP_URL_NAME": "totp:setup",
     # Admin-Pfade, die ohne TOTP erreichbar sein müssen
-    "ADMIN_EXEMPT_PREFIXES": ("/admin/login", "/admin/logout", "/admin/jsi18n"),
+    "ADMIN_EXEMPT_PREFIXES": (
+        "/admin/login",
+        "/admin/logout",
+        "/admin/jsi18n",
+        "/admin/passkeys/",
+    ),
+    # Akzeptiert auch Passkey-Verifikation als Alternative zu TOTP
+    "ACCEPT_PASSKEY_VERIFIED": True,
 }
 
 
@@ -40,22 +47,6 @@ PASSKEYS_DEFAULTS = {
     "TIMEOUT": 60000,
     # Pflicht! z.B. "accounts.PasskeyCredential"
     "CREDENTIAL_MODEL": None,
-    # Akzeptiert auch TOTP-Verifikation in der Passkey-Middleware
-    "ACCEPT_TOTP_VERIFIED": True,
-    "ADMIN_ONLY": True,
-    "EXEMPT_URL_PREFIXES": (
-        "/login/",
-        "/logout/",
-        "/static/",
-        "/media/",
-        "/api/",
-    ),
-    "ADMIN_VERIFY_URL_NAME": "admin_passkeys:verify",
-    "ADMIN_SETUP_URL_NAME": "admin_passkeys:manage",
-    "ADMIN_MANAGE_URL_NAME": "admin_passkeys:manage",
-    "FRONTEND_VERIFY_URL_NAME": "passkeys:verify",
-    "FRONTEND_SETUP_URL_NAME": "passkeys:manage",
-    "ADMIN_EXEMPT_PREFIXES": ("/admin/login", "/admin/logout", "/admin/jsi18n"),
 }
 
 

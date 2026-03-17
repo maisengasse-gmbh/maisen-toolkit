@@ -1,5 +1,5 @@
 {% extends "admin/base_site.html" %}
-{% load i18n %}
+{% load i18n static %}
 
 {% block content %}
     <div id="content-main" class="pt-12">
@@ -12,5 +12,35 @@
             {{ form.as_p }}
             <button type="submit">{% trans "Bestätigen" %}</button>
         </form>
+
+        {% if has_passkeys %}
+            <hr class="my-8">
+            <p class="mb-4">{% trans "Oder verifizieren Sie sich mit einem Passkey:" %}</p>
+
+            <div id="passkey-error" style="display:none; color:red;" class="mb-4"></div>
+
+            <button type="button" id="passkey-verify-btn">
+                {% trans "Mit Passkey verifizieren" %}
+            </button>
+
+            <script src="{% static 'maisen_passkeys/js/webauthn.js' %}"></script>
+            <script>
+                document.getElementById("passkey-verify-btn").addEventListener("click", async function() {
+                    var errorEl = document.getElementById("passkey-error");
+                    errorEl.style.display = "none";
+                    try {
+                        await authenticatePasskey(
+                            "{% url 'admin_passkeys:authenticate_begin' %}",
+                            "{% url 'admin_passkeys:authenticate_complete' %}",
+                            "{{ csrf_token }}"
+                        );
+                        window.location.href = "/admin/";
+                    } catch (e) {
+                        errorEl.textContent = e.message;
+                        errorEl.style.display = "block";
+                    }
+                });
+            </script>
+        {% endif %}
     </div>
 {% endblock %}

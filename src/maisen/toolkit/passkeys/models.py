@@ -64,26 +64,3 @@ class PasskeyCredentialMixin(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.user})"
-
-
-class GroupPasskeyRequirementMixin(models.Model):
-    """Abstract Mixin – dem eigenen Projekt als konkretes Model hinzufügen."""
-
-    class Meta:
-        abstract = True
-        verbose_name = _("Gruppen-Passkey-Pflicht")
-        verbose_name_plural = _("Gruppen-Passkey-Pflichten")
-
-    group = models.OneToOneField(
-        "auth.Group",
-        on_delete=models.CASCADE,
-        related_name="passkey_requirement",
-    )
-    passkey_required = models.BooleanField(
-        default=False,
-        verbose_name=_("Passkey erforderlich"),
-    )
-
-    def __str__(self):
-        status = "erforderlich" if self.passkey_required else "optional"
-        return f"{self.group.name} – Passkey {status}"

@@ -1,5 +1,5 @@
 {% extends "admin/base_site.html" %}
-{% load i18n unfold %}
+{% load i18n static unfold %}
 
 {% block extrahead %}
     {{ block.super }}
@@ -35,5 +35,43 @@
                 {% endcomponent %}
             </div>
         </form>
+
+        {% if has_passkeys %}
+            <div class="mt-8 pt-8 border-t border-base-200 dark:border-base-800">
+                <div class="mb-4">
+                    {% component "unfold/components/text.html" %}
+                        {% trans "Oder verifizieren Sie sich mit einem Passkey:" %}
+                    {% endcomponent %}
+                </div>
+
+                <div id="passkey-error" style="display:none;" class="mb-4 text-red-600 dark:text-red-400"></div>
+
+                <div class="flex justify-start">
+                    <button type="button" id="passkey-verify-btn"
+                        class="border cursor-pointer font-medium rounded-default text-font-default-light dark:text-font-default-dark bg-base-100 dark:bg-base-800 border-base-200 dark:border-base-700 flex px-4 py-2 text-sm hover:bg-base-200 dark:hover:bg-base-700">
+                        {% trans "Mit Passkey verifizieren" %}
+                    </button>
+                </div>
+            </div>
+
+            <script src="{% static 'maisen_passkeys/js/webauthn.js' %}"></script>
+            <script>
+                document.getElementById("passkey-verify-btn").addEventListener("click", async function() {
+                    var errorEl = document.getElementById("passkey-error");
+                    errorEl.style.display = "none";
+                    try {
+                        await authenticatePasskey(
+                            "{% url 'admin_passkeys:authenticate_begin' %}",
+                            "{% url 'admin_passkeys:authenticate_complete' %}",
+                            "{{ csrf_token }}"
+                        );
+                        window.location.href = "/admin/";
+                    } catch (e) {
+                        errorEl.textContent = e.message;
+                        errorEl.style.display = "block";
+                    }
+                });
+            </script>
+        {% endif %}
     </div>
 {% endblock %}

@@ -9,11 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 
 from fido2 import cbor
-from fido2.webauthn import (
-    AttestedCredentialData,
-    AuthenticatorData,
-    CollectedClientData,
-)
+from fido2.webauthn import AttestedCredentialData
 
 from maisen.toolkit.conf import get_passkey_setting
 from maisen.toolkit.passkeys.forms import PasskeyNameForm
@@ -142,7 +138,7 @@ def passkey_manage(
 
 
 # ---------------------------------------------------------------------------
-# JSON-Endpoints (WebAuthn-Zeremonie)
+# JSON-Endpoints (WebAuthn-Zeremonie) — fido2 >= 2.0 API
 # ---------------------------------------------------------------------------
 
 
@@ -262,52 +258,29 @@ def passkey_authenticate_complete(request):
     except (json.JSONDecodeError, ValueError):
         return JsonResponse({"error": "Ungültiger Request."}, status=400)
 
-    CredentialModel = get_credential_model()
-    user_creds = CredentialModel.objects.filter(user=request.user)
+    credentials = get_user_credentials(request.user)
 
-    # AttestedCredentialData mit Public Key für Verifikation aufbauen
-    fido2_credentials = []
-    cred_map = {}
-    for cred in user_creds:
-        cred_id = bytes(cred.credential_id)
-        public_key = cbor.decode(bytes(cred.public_key))
-        acd = AttestedCredentialData.create(
-            aaguid=bytes.fromhex(cred.aaguid.replace("-", ""))
-            if cred.aaguid
-            else b"\x00" * 16,
-            credential_id=cred_id,
-            public_key=public_key,
-        )
-        fido2_credentials.append(acd)
-        cred_map[cred_id] = cred
-
+    # fido2 2.x API: authenticate_complete(state, credentials, response_dict)
     try:
-        credential_id = _b64url_decode(body["credentialId"])
-        client_data = CollectedClientData(
-            _b64url_decode(body["response"]["clientDataJSON"])
-        )
-        auth_data = AuthenticatorData(
-            _b64url_decode(body["response"]["authenticatorData"])
-        )
-        signature = _b64url_decode(body["response"]["signature"])
-
-        server.authenticate_complete(
-            state,
-            fido2_credentials,
-            credential_id,
-            client_data,
-            auth_data,
-            signature,
-        )
+        server.authenticate_complete(state, credentials, body)
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return JsonResponse({"error": str(e)}, status=400)
 
     # Sign-Count und last_used_at aktualisieren
-    db_cred = cred_map.get(credential_id)
-    if db_cred:
-        db_cred.sign_count = auth_data.counter
-        db_cred.last_used_at = timezone.now()
-        db_cred.save(update_fields=["sign_count", "last_used_at"])
+    try:
+        credential_id = _b64url_decode(body["rawId"])
+        CredentialModel = get_credential_model()
+        db_cred = CredentialModel.objects.filter(
+            user=request.user,
+            credential_id=credential_id,
+        ).first()
+        if db_cred:
+            db_cred.last_used_at = timezone.now()
+            db_cred.save(update_fields=["last_used_at"])
+    except (KeyError, Exception):
+        pass  # Sign-Count-Update ist optional
 
     request.session["passkey_verified"] = True
 

@@ -1,6 +1,7 @@
 from django.apps import apps
 from django.core.exceptions import ImproperlyConfigured
 
+from fido2 import cbor
 from fido2.server import Fido2Server
 from fido2.webauthn import PublicKeyCredentialRpEntity, AttestedCredentialData
 
@@ -27,24 +28,18 @@ def get_fido2_server():
     return Fido2Server(rp)
 
 
-def user_requires_passkey(user):
-    """Gibt True zurück, wenn der User einen Passkey einrichten muss."""
-    if user.is_superuser or user.is_staff:
-        return True
-    return user.groups.filter(passkey_requirement__passkey_required=True).exists()
-
-
 def get_user_credentials(user):
     """Gibt eine Liste von AttestedCredentialData für den User zurück."""
     CredentialModel = get_credential_model()
     credentials = CredentialModel.objects.filter(user=user)
     result = []
     for cred in credentials:
+        public_key = cbor.decode(bytes(cred.public_key))
         result.append(
             AttestedCredentialData.create(
                 aaguid=bytes.fromhex(cred.aaguid.replace("-", "")) if cred.aaguid else b"\x00" * 16,
                 credential_id=bytes(cred.credential_id),
-                public_key=None,  # Not needed for authentication begin
+                public_key=public_key,
             )
         )
     return result
