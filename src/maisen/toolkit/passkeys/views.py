@@ -196,11 +196,7 @@ def passkey_register_complete(request):
         return JsonResponse({"error": "Ungültiger Request."}, status=400)
 
     try:
-        client_data = CollectedClientData(
-            _b64url_decode(body["response"]["clientDataJSON"])
-        )
-        att_obj = _b64url_decode(body["response"]["attestationObject"])
-        auth_data = server.register_complete(state, client_data, att_obj)
+        auth_data = server.register_complete(state, body)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
 
