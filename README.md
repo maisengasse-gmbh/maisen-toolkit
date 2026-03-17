@@ -17,6 +17,7 @@ maisen-toolkit @ git+https://github.com/maisengasse-gmbh/maisen-toolkit.git@v0.1
 
 | Modul | Beschreibung | Doku |
 |---|---|---|
+| `maisen.toolkit.core` | TimeStampMixin, DublinCore, Annotation, AddressData, GeoLocation | [README](src/maisen/toolkit/core/README.md) |
 | `maisen.toolkit.totp` | TOTP Two-Factor Authentication mit Middleware, Unfold-Support, Signals | [README](src/maisen/toolkit/totp/README.md) |
 
 ## Development

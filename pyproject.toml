@@ -47,6 +47,7 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "maisen.toolkit.totp" = ["templates/**/*.html", "migrations/*.py"]
+"maisen.toolkit.core" = ["migrations/*.py"]
 
 [tool.setuptools_scm]
 
