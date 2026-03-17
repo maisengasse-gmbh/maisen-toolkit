@@ -19,6 +19,6 @@ def render_qr(secret, username):
 
 def user_requires_totp(user):
     """Gibt True zurück, wenn der User TOTP aktivieren muss."""
-    if user.is_superuser:
+    if user.is_superuser or user.is_staff:
         return True
     return user.groups.filter(totp_requirement__totp_required=True).exists()
