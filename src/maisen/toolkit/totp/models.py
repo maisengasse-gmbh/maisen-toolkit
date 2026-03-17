@@ -12,10 +12,11 @@ class TotpUserMixin(models.Model):
         abstract = True
 
 
-class GroupTotpRequirement(models.Model):
-    """TOTP-Pflicht pro Auth-Gruppe."""
+class GroupTotpRequirementMixin(models.Model):
+    """Abstract Mixin – dem eigenen Projekt als konkretes Model hinzufügen."""
 
     class Meta:
+        abstract = True
         verbose_name = _("Gruppen-TOTP-Pflicht")
         verbose_name_plural = _("Gruppen-TOTP-Pflichten")
 
