@@ -103,6 +103,39 @@ from maisen.toolkit.core.models import GeoLocation
 nearby = GeoLocation.objects.get_nearby_coords(47.26, 11.39, max_distance=10)
 ```
 
+## Accounts Mixins
+
+### UserProfileMixin
+
+Gemeinsame User-Profil-Felder (phone, gender, birthday).
+
+```python
+from maisen.toolkit.core.models import UserProfileMixin
+
+class UserAccount(AbstractUser, UserProfileMixin):
+    ...
+    # erbt: phone, gender, birthday
+```
+
+### OwnerAware + OwnerAwareQuerySetMixin
+
+Owner-Beziehung fuer Models mit `is_owned_by()`/`is_managable_by()`.
+
+```python
+from maisen.toolkit.core.models import OwnerAware, OwnerAwareQuerySetMixin
+
+class ProjectQuerySet(OwnerAwareQuerySetMixin, models.QuerySet):
+    pass
+
+class Project(OwnerAware):
+    objects = ProjectQuerySet.as_manager()
+    title = models.CharField(max_length=100)
+
+# Nutzung:
+project.is_owned_by(user)
+Project.objects.owned_by(user)
+```
+
 ## Admin-Inlines
 
 ```python
