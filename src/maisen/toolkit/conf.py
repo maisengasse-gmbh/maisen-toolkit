@@ -12,6 +12,14 @@ DEFAULTS = {
         "/media/",
         "/api/",
     ),
+    # URL-Namen für Middleware-Redirects (müssen zu den eingebundenen Patterns passen)
+    "ADMIN_VERIFY_URL_NAME": "admin_totp:verify",
+    "ADMIN_SETUP_URL_NAME": "admin_totp:setup",
+    "ADMIN_MANAGE_URL_NAME": "admin_totp:manage",
+    "FRONTEND_VERIFY_URL_NAME": "totp:verify",
+    "FRONTEND_SETUP_URL_NAME": "totp:setup",
+    # Admin-Pfade, die ohne TOTP erreichbar sein müssen
+    "ADMIN_EXEMPT_PREFIXES": ("/admin/login", "/admin/logout", "/admin/jsi18n"),
 }
 
 

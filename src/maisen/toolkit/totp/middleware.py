@@ -1,4 +1,5 @@
 from django.shortcuts import redirect
+from django.urls import reverse
 
 from maisen.toolkit.conf import get_totp_setting
 from maisen.toolkit.totp.utils import user_requires_totp
@@ -11,7 +12,10 @@ class TotpMiddleware:
     Konfiguration via MAISEN_TOTP in den Django-Settings:
       ADMIN_ONLY: True  → nur /admin/ schützen (Default)
       ADMIN_ONLY: False → auch Frontend schützen
-      EXEMPT_URL_PREFIXES: Tuple von Pfaden, die ohne TOTP erreichbar sind
+      ADMIN_VERIFY_URL_NAME / ADMIN_SETUP_URL_NAME: URL-Namen für Redirects
+      FRONTEND_VERIFY_URL_NAME / FRONTEND_SETUP_URL_NAME: URL-Namen für Redirects
+      ADMIN_EXEMPT_PREFIXES: Pfade im Admin, die ohne TOTP erreichbar sind
+      EXEMPT_URL_PREFIXES: Frontend-Pfade, die ohne TOTP erreichbar sind
     """
 
     def __init__(self, get_response):
@@ -24,33 +28,41 @@ class TotpMiddleware:
         verified = request.session.get("totp_verified")
 
         # Admin-Bereich
-        if (
-            request.path.startswith("/admin/")
-            and not request.path.startswith("/admin/totp/")
-            and not request.path.startswith("/admin/login")
-            and not request.path.startswith("/admin/logout")
-            and not request.path.startswith("/admin/jsi18n")
-        ):
+        if request.path.startswith("/admin/"):
+            admin_verify = reverse(get_totp_setting("ADMIN_VERIFY_URL_NAME"))
+            admin_setup = reverse(get_totp_setting("ADMIN_SETUP_URL_NAME"))
+            admin_manage = reverse(get_totp_setting("ADMIN_MANAGE_URL_NAME"))
+            admin_exempt = get_totp_setting("ADMIN_EXEMPT_PREFIXES")
+
+            # TOTP-eigene URLs und exempt Pfade durchlassen
+            if any(
+                request.path.startswith(p)
+                for p in (admin_verify, admin_setup, admin_manage, *admin_exempt)
+            ):
+                return self.get_response(request)
+
             if request.user.totp_enabled:
                 if not verified:
                     request.session["totp_setup_forced"] = True
-                    return redirect("/admin/totp/verify/")
+                    return redirect(admin_verify)
             else:
                 request.session["totp_setup_forced"] = True
-                return redirect("/admin/totp/setup/")
+                return redirect(admin_setup)
 
         # Frontend-Bereich (nur wenn nicht ADMIN_ONLY)
         admin_only = get_totp_setting("ADMIN_ONLY")
         if not admin_only:
+            frontend_verify = reverse(get_totp_setting("FRONTEND_VERIFY_URL_NAME"))
+            frontend_setup = reverse(get_totp_setting("FRONTEND_SETUP_URL_NAME"))
             exempt = get_totp_setting("EXEMPT_URL_PREFIXES")
             # /admin/ ist immer exempt (wird oben behandelt)
-            all_exempt = tuple(exempt) + ("/admin/",)
+            all_exempt = (*tuple(exempt), "/admin/", frontend_verify, frontend_setup)
 
             if not any(request.path.startswith(p) for p in all_exempt):
                 if request.user.totp_enabled:
                     if not verified:
-                        return redirect("/totp/verify/")
+                        return redirect(frontend_verify)
                 else:
-                    return redirect("/totp/setup/")
+                    return redirect(frontend_setup)
 
         return self.get_response(request)

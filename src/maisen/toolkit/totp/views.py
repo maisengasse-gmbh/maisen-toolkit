@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 
 from maisen.toolkit.conf import get_totp_setting
 from maisen.toolkit.totp.forms import TotpCodeForm
+from maisen.toolkit.totp.signals import totp_disabled, totp_setup_complete, totp_verified
 from maisen.toolkit.totp.utils import render_qr
 
 
@@ -43,6 +44,9 @@ def totp_verify(
         if pyotp.TOTP(user.totp_secret).verify(code, valid_window=valid_window):
             request.session["totp_verified"] = True
             request.session.pop("totp_setup_forced", None)
+            totp_verified.send(
+                sender=user.__class__, user=user, request=request
+            )
             return redirect(success_url)
 
         messages.error(request, _("Ungültiger Code. Bitte erneut versuchen."))
@@ -107,6 +111,9 @@ def totp_setup(
             del request.session[session_key]
             request.session["totp_verified"] = True
             request.session.pop("totp_setup_forced", None)
+            totp_setup_complete.send(
+                sender=user.__class__, user=user, request=request
+            )
             messages.success(request, _("2FA erfolgreich eingerichtet."))
             return redirect(manage_url_name)
 
@@ -159,6 +166,9 @@ def totp_manage(
                 user.totp_enabled = False
                 user.save(update_fields=["totp_secret", "totp_enabled"])
                 request.session.pop("totp_verified", None)
+                totp_disabled.send(
+                    sender=user.__class__, user=user, request=request
+                )
                 messages.success(request, _("2FA wurde deaktiviert."))
                 return redirect(manage_url_name)
 
