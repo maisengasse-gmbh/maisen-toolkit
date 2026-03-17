@@ -114,7 +114,7 @@ def passkey_manage(
         if action == "delete":
             credential_id = request.POST.get("credential_id")
             if credential_id:
-                deleted, _ = CredentialModel.objects.filter(
+                deleted, _detail = CredentialModel.objects.filter(
                     user=user, pk=credential_id
                 ).delete()
                 if deleted:
